@@ -14,4 +14,5 @@ include_directories(include)
 add_executable(mini_fs
     src/fs.c
     src/main.c
+    src/dir.c
 )

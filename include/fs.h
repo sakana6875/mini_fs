@@ -1,3 +1,6 @@
+#ifndef FS_H
+#define FS_H
+
 #include <stdint.h>
 #include <stdio.h>
 
@@ -33,4 +36,5 @@ void init_inode(inode_t* node, uint8_t type);
 void free_inode(int ino);
 void free_block(int blk);
 void fs_init();
-void init_root_dir_entries(int root_inode, int blk);
+
+#endif
