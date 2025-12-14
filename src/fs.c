@@ -47,6 +47,20 @@ void free_block(int blk){
     }
 }
 
+// 初始化根目录
+void init_root_dir_entries(int root_inode, int blk){
+    dir_entry_t entries[2];
+
+    strcpy(entries[0].name, ".");
+    entries[0].inode_id = root_inode;
+
+    strcpy(entries[1].name, "..");
+    entries[1].inode_id = root_inode;
+
+    memcpy(&data_blocks[blk][0], entries, sizeof(entries));
+}
+
+// 初始化文件系统
 void fs_init(){
     memset(inode_bitmap, 0, sizeof(inode_bitmap));
     memset(block_bitmap, 0, sizeof(block_bitmap));

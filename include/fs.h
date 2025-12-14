@@ -15,18 +15,22 @@ typedef struct inode{
     int32_t blocks[DIRECT_BLOCKS]; 
 }inode_t;
 
+typedef struct dir_entry{
+    char name[28];
+    int inode_id;
+}dir_entry_t;
+
 //全局数据
 extern uint8_t inode_bitmap[MAX_INODES];
 extern uint8_t block_bitmap[MAX_BLOCKS];
 extern inode_t inodes_table[MAX_INODES];
 extern uint8_t data_blocks[MAX_BLOCKS][BLOCK_SIZE];
 
-//地基函数
+//函数声明
 int alloc_inode();
 int alloc_block();
 void init_inode(inode_t* node, uint8_t type);
 void free_inode(int ino);
 void free_block(int blk);
-
-//fs 初始化
 void fs_init();
+void init_root_dir_entries(int root_inode, int blk);
