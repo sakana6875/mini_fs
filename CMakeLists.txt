@@ -12,6 +12,5 @@ include_directories(include)
 
 # 添加可执行程序
 add_executable(mini_fs
-    src/main.c 
-    src/hello.c
+    src/fs.c
 )
