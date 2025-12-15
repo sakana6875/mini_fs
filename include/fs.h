@@ -18,10 +18,6 @@ typedef struct inode{
     int32_t blocks[DIRECT_BLOCKS]; 
 }inode_t;
 
-typedef struct dir_entry{
-    char name[28];
-    int inode_id;
-}dir_entry_t;
 
 //全局数据
 extern uint8_t inode_bitmap[MAX_INODES];
