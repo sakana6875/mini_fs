@@ -5,5 +5,6 @@
 
 int lookup_path(const char* path);
 int mkdir_path(const char* path);
+int touch_path(const char* path);
 
 #endif

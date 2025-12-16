@@ -117,9 +117,13 @@ void dir_list(inode_t* dir){
         else{
             dir_entry_t* entries = (dir_entry_t*)&data_blocks[blk][0];
             for (int j = 0; j < BLOCK_SIZE / sizeof(dir_entry_t); j++){
-                if (entries[j].inode_id != -1){
-                    printf("%s\n", entries[j].name);
-                }
+                if (entries[j].inode_id != -1  &&
+                    entries[j].name[0] != '\0' && 
+                    strcmp(entries[j].name, ".") != 0 && 
+                    strcmp(entries[j].name, "..") != 0)
+                    {
+                        printf("%s\n", entries[j].name);
+                    }
             }
         }
     }
