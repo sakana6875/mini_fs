@@ -9,6 +9,7 @@
 #define BLOCK_SIZE 512
 #define DIRECT_BLOCKS 8
 #define ROOT_INODE 0
+#define MAX_FD 32
 
 #define INODE_FILE 1
 #define INODE_DIR 2

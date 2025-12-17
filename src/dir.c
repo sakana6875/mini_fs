@@ -151,13 +151,16 @@ int dir_is_empty(inode_t* dir){
 
 // 之后用 lookup_path 加上 路径拆分 替代
 // 返回这个目录的父 inode
-/*int dir_parent(const char* path, char* child_name){
+int dir_parent(const char* path, char* child_name){
+    if (!path || path[0] != '/'){
+        return -1;
+    }
+
     char buf[256];
-    strncpy(buf, path, sizeof(buf));
+    strncpy(buf, path, sizeof(buf)-1);
     buf[sizeof(buf)-1] = '\0';
 
-    // 选择起点
-    int cur_ino = (path[0] == '/') ? 0 : 0; // 暂时都用根
+    int cur_ino = (path[0] == '/') ? ROOT_INODE : ROOT_INODE;
     inode_t* cur = &inodes_table[cur_ino];
 
     char* token;
@@ -167,33 +170,29 @@ int dir_is_empty(inode_t* dir){
     if (!token) return -1;
 
     char* next;
-    while(1){
-        next = strtok_r(NULL, "/", &saveptr);
-
-        if (next == NULL){
-            strncpy(child_name, token, 28);
-            child_name[27] = '\0';
-            return cur_ino;
+    while ((next = strtok_r(NULL, "/", &saveptr)) != NULL){
+        if (strcmp(token, ".") == 0){
+            // 当前目录
         }
+        else if (strcmp(token, "..") == 0){
+            int parent_ino = dir_lookup(cur, "..");
+            if (cur_ino < 0) return -1;
+            cur_ino = parent_ino;
+            cur = &inodes_table[cur_ino];
+        } else {
+            int ino = dir_lookup(cur, token);
+            if (ino < 0) return -1;
+            cur_ino = ino;
+            cur = &inodes_table[cur_ino];
+        }
+        token = next;
     }
 
-    // 处理中间路径
-    if (strcmp(token, '.') == 0){
-        // 什么都不做
-    } else if (strcmp(token, '..') == 0){
-        int p = dir_lookup(cur, '..');
-        if (p < 0) return -1;
-        cur_ino = p;
-        cur = &inodes_table[cur_ino];
-    } else {
-        int ino = dir_lookup(cur, token);
-        if (ino < 0) return -1;
-        if (inodes_table[ino].type != INODE_DIR) return -1;
-        cur_ino = ino;
-        cur = &inodes_table[cur_ino];
-    }
-    token = next;
-}*/
+    strncpy(child_name, token, 256);
+    child_name[255] = "\0";
+
+    return cur_ino;
+}
 
 // 在一个目录里创建一个新的 inode
 int dir_create(inode_t* parent, const char* name){
