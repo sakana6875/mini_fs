@@ -30,7 +30,7 @@ void dir_list(inode_t* dir);
 int dir_is_empty(inode_t* dir);
 
 // 返回这个目录的父 inode
-//int dir_parent(const char* path, char* child_name);
+int dir_parent(const char* path, char* child_name);
 
 // 在一个目录里创建一个新 inode
 int dir_create(inode_t* parent, const char* name);

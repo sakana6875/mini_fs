@@ -33,10 +33,13 @@ int file_close(int fd);
 // 删除文件
 int file_remove(const char* path);
 
-// 关闭文件
-int file_close(int fd);
-
 // 文件追加
 size_t file_append(int fd, const char* buf, size_t size);
+
+// 文件裁剪
+int file_truncate(int fd, size_t new_size);
+
+// 
+int file_lseek(int fd, off_t offset, int whence);
 
 #endif

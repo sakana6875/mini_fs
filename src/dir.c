@@ -189,7 +189,7 @@ int dir_parent(const char* path, char* child_name){
     }
 
     strncpy(child_name, token, 256);
-    child_name[255] = "\0";
+    child_name[255] = '\0';
 
     return cur_ino;
 }
