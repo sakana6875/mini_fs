@@ -17,4 +17,5 @@ add_executable(mini_fs
     src/dir.c
     src/path.c
     src/file.c
+    src/shell.c
 )
