@@ -147,6 +147,17 @@ int file_open(const char* path, int flags){
         return -1;
     }
 
+    if (flags & O_TRUNC) {
+        // 清空文件内容：释放所有数据块，重置 size
+        for (int i = 0; i < DIRECT_BLOCKS; i++) {
+            if (inode->blocks[i] != -1) {
+                free_block(inode->blocks[i]);
+                inode->blocks[i] = -1;
+            }
+        }
+        inode->size = 0;
+    }
+
     int fd = -1;
     for (int i = 0; i < MAX_FD; i++){
         if (fd_table[i] == NULL){

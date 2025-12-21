@@ -101,7 +101,7 @@ int touch_path(const char* path){
     }
 
     if (dir_lookup(parent, name) >= 0){
-        return 0;
+        return dir_lookup(parent, name);
     }
 
     int ino = alloc_inode();

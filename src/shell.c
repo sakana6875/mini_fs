@@ -48,7 +48,7 @@ void cmd_mkdir(const char* arg){
     
     char path[256];
     if (arg[0] != '/'){
-        snprintf(path, sizeof(arg), "/%s", arg);
+        snprintf(path, sizeof(path), "/%s", arg);
     } else {
         strncpy(path, arg, sizeof(path) - 1);
     }
@@ -68,9 +68,9 @@ void cmd_touch(const char* arg){
 
     char path[256];
     if (arg[0] != '/'){
-        snprintf(path, sizeof(arg), "/%s", arg);
+        snprintf(path, sizeof(path), "/%s", arg);
     } else {
-        strncpy(path, arg, sizeof(arg) - 1);
+        strncpy(path, arg, sizeof(path) - 1);
     }
     path[sizeof(path)-1] = '\0';
 
@@ -88,9 +88,9 @@ void cmd_cat(const char* arg){
 
     char path[256];
     if (arg[0] != '/'){
-        snprintf(path, sizeof(arg), "/%s", arg);
+        snprintf(path, sizeof(path), "/%s", arg);
     } else {
-        strncpy(path, arg, sizeof(arg) - 1);
+        strncpy(path, arg, sizeof(path) - 1);
     }
     path[sizeof(path) - 1] = '\0';
 
@@ -194,12 +194,14 @@ if (filename[0] != '/') {
 }
 
     // 6. 写入文件
-    int fd = file_open(path, O_CREAT | O_WRONLY);
+    int fd = file_open(path, O_CREAT | O_WRONLY | O_TRUNC);
     if (fd < 0) {
         printf("echo: cannot write to '%s'\n", path);
         return;
     }
-    file_write(fd, text, strlen(text));
+    size_t len = strlen(text);
+    file_write(fd, text, len);
+    file_write(fd, "\n", 1);
     file_close(fd);
     printf("Wrote %zu bytes to %s\n", strlen(text), path);
 }
@@ -264,9 +266,9 @@ void cmd_rmdir(const char* arg){
         if (dir->blocks[i] != -1){
             free_block(dir->blocks[i]);
         }
-        free_inode(ino);
-        printf("Directory '%s' removed\n", path);
     }
+    free_inode(ino);
+    printf("Directory '%s' removed\n", path);
 }
 
 void cmd_help(){
@@ -309,6 +311,12 @@ void start_shell(){
             continue;
         }
 
+        // 先检查是否是 echo 重定向命令
+        if (strncmp(cmd_line, "echo", 4) == 0 && strchr(cmd_line, '>') != NULL) {
+            cmd_echo_redirect(cmd_line);
+            continue;  // 跳过后面的 strtok 解析
+        }
+
         // 解析命令
         char* token = strtok(cmd_line, " ");
         if (!token) continue;
@@ -328,8 +336,6 @@ void start_shell(){
             cmd_rm(arg);
         } else if (strcmp(token, "rmdir") == 0){
             cmd_rmdir(arg);
-        } else if (strncmp(cmd_line, "echo", 4) == 0){
-            cmd_echo_redirect(cmd_line);
         } else {
             printf("mini_fs: command not found: %s\n", token);
         }
