@@ -56,7 +56,7 @@ void cmd_mkdir(const char* arg){
 
     int ino = mkdir_path(path);
     if (ino < 0){
-        printf("mkdir: cannot create direction '%s'\n", path);
+        printf("mkdir: cannot create directory '%s'\n", path);
     }
 }
 
@@ -110,14 +110,14 @@ void cmd_cat(const char* arg){
 }
 
 void cmd_echo_redirect(const char* line) {
-    // 1. 检查是否包含 ">"
+    // 1. 查找第一个 '>' 或 '>>'
     const char* redirect = strstr(line, ">");
     if (!redirect || redirect == line) {
         printf("Usage: echo \"text\" > file\n");
         return;
     }
 
-    // 2. 找第一个引号（在 "echo" 之后）
+    // 2. 提取文本内容（在 "echo" 和 ">" 之间）
     const char* echo_part = line;
     if (strncmp(line, "echo", 4) == 0) {
         echo_part = line + 4;
@@ -138,14 +138,13 @@ void cmd_echo_redirect(const char* line) {
         return;
     }
 
-    // 3. 提取文本内容
+    // 提取文本
     size_t text_len = end_quote - start_quote - 1;
     char text[256];
-    if (text_len >= sizeof(text)) text_len = sizeof(text) - 1;
     memcpy(text, start_quote + 1, text_len);
     text[text_len] = '\0';
 
-    // 4. 提取文件名（">" 之后的部分）
+    // 3. 提取文件名（">" 后面的部分）
     const char* filename_start = redirect + 1; // 跳过 '>'
     while (*filename_start && isspace((unsigned char)*filename_start)) {
         filename_start++;
@@ -156,15 +155,17 @@ void cmd_echo_redirect(const char* line) {
         return;
     }
 
-    // 支持 "> file" 或 ">> file"（忽略 >> 的追加语义，按覆盖处理）
+    // 判断是否是 >>（两个 >）
+    int is_append = 0;
     if (*filename_start == '>') {
+        is_append = 1;
         filename_start++; // 跳过第二个 '>'
         while (*filename_start && isspace((unsigned char)*filename_start)) {
             filename_start++;
         }
     }
 
-    // 复制文件名（最多 255 字符）
+    // 复制文件名
     char filename[256];
     const char* space_after_filename = strpbrk(filename_start, " \t\n\r");
     size_t fname_len = space_after_filename ? (size_t)(space_after_filename - filename_start) : strlen(filename_start);
@@ -177,32 +178,34 @@ void cmd_echo_redirect(const char* line) {
         return;
     }
 
-    // 5. 构造绝对路径
+    // 构造绝对路径
     char path[256];
-if (filename[0] != '/') {
-    if (strlen(filename) >= sizeof(path) - 1) {
-        printf("echo: filename too long (max %zu chars)\n", sizeof(path) - 2);
-        return;
+    if (filename[0] != '/') {
+        snprintf(path, sizeof(path), "/%s", filename);
+    } else {
+        strcpy(path, filename);
     }
-    snprintf(path, sizeof(path), "/%s", filename);
-} else {
-    if (strlen(filename) >= sizeof(path)) {
-        printf("echo: filename too long (max %zu chars)\n", sizeof(path) - 1);
-        return;
-    }
-    strcpy(path, filename);
-}
 
-    // 6. 写入文件
-    int fd = file_open(path, O_CREAT | O_WRONLY | O_TRUNC);
+    int flags = O_CREAT | O_WRONLY;
+    if (is_append) {
+        flags |= O_APPEND;
+    } else {
+        flags |= O_TRUNC;  // 覆写
+    }
+
+    // 打开文件
+    int fd = file_open(path, flags);
     if (fd < 0) {
         printf("echo: cannot write to '%s'\n", path);
         return;
     }
+
+    // 写入内容
     size_t len = strlen(text);
     file_write(fd, text, len);
     file_write(fd, "\n", 1);
     file_close(fd);
+
     printf("Wrote %zu bytes to %s\n", strlen(text), path);
 }
 
