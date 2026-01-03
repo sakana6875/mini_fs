@@ -33,34 +33,16 @@ int mkdir_path(const char* path){
     }
 
     char buf[256];
-    strncpy(buf, path, sizeof(buf)-1);
-    buf[sizeof(buf)-1] = '\0';
-
-    char* slash = strrchr(buf, '/');
-
-    char* name;
-    int parent_ino;
-
-    if (slash == NULL){
-        parent_ino = ROOT_INODE;
-        name = buf;
+    if (path[0] != '/'){
+        snprintf(buf, sizeof(buf), "/%s", path);
     } else {
-        if (slash == buf){
-            parent_ino = ROOT_INODE;
-        } else {
-            *slash = '\0';
-            parent_ino = lookup_path(buf);
+        size_t len = strlen(path);
+        if (len > sizeof(buf)){
+            return -1;
         }
-        name = slash + 1;
+        strcpy(buf, path);
     }
-
-    if (parent_ino < 0 || name[0] == '\0'){
-        return -1;
-    }
-
-    inode_t* parent = &inodes_table[parent_ino];
-
-    return dir_create(parent, name);
+    return mkdir_recursive_helper(buf);
 }
 
 int touch_path(const char* path){
@@ -117,4 +99,52 @@ int touch_path(const char* path){
     }
 
     return ino;
+}
+
+int mkdir_recursive_helper(const char* path){
+    if (!path || path[0] != '/'){
+        return -1;
+    }
+
+    char buf[256];
+    strncpy(buf, path, sizeof(buf)-1);
+    buf[sizeof(buf)-1] = '\0';
+
+    size_t len = strlen(buf);
+    if (len > 1 && buf[len - 1] == '/'){
+        buf[len - 1] = '\0';
+    }
+
+    if (strcmp(buf, "/") == 0){
+        return 0;
+    }
+
+    char* last_slash = strrchr(buf, '/');
+    if (!last_slash) return -1;
+
+    char* name = last_slash + 1;
+    if (name[0] == '\0') return -1;
+
+    if (last_slash == buf){
+        int parent_ino = ROOT_INODE;
+        inode_t* parent = &inodes_table[parent_ino];
+        if (dir_lookup(parent,name) >= 0){
+            return 0;
+        }
+        return dir_create(parent, name);
+    } else {
+        *last_slash = '\0';
+        if (mkdir_recursive_helper(buf) < 0){
+            return -1;
+        }
+
+        int parent_ino = lookup_path(buf);
+        if (parent_ino < 0) return -1;
+
+        inode_t* parent = &inodes_table[parent_ino];
+        if (dir_lookup(parent, name) >= 0){
+            return 0;
+        }
+        return dir_create(parent, name);
+    }
 }
